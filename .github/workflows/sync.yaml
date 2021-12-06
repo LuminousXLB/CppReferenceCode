@@ -1,0 +1,39 @@
+name: Sync to Gist
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      AUTH: LuminousXLB:${{ secrets.API_TOKEN_GITHUB }}
+      GIST_ID: d43f80fba9d765544787bc6c4c6e684f
+    steps:
+      - uses: actions/checkout@v2
+      - name: check git version
+        run: |
+          git --version
+      - name: set git username and email
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "<>"
+      - name: add gist remote
+        run: |
+          git clone https://${{ env.AUTH }}@gist.github.com/${{ env.GIST_ID }}.git .gist
+      - name: sync files
+        run: |
+          rm .gist/*
+          cp $(find . -type f -maxdepth 1) .gist
+      - name: commit new changes and push
+        run: |
+          cd .gist
+          git add .
+          git commit -m "$GITHUB_SHA"
+          git push -f
+
